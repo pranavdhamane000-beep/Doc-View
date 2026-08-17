@@ -18,31 +18,33 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
       - name: Setup Gradle Wrapper
         run: |
           mkdir -p gradle/wrapper
-          cat > gradle/wrapper/gradle-wrapper.properties << 'EOF'
-          distributionUrl=https\://services.gradle.org/distributions/gradle-7.5.1-bin.zip
+          GRADLE_VERSION=7.5.1
+          wget -q "https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip" -O /tmp/gradle.zip
+          unzip -q /tmp/gradle.zip -d /tmp/
+          cp /tmp/gradle-${GRADLE_VERSION}/lib/gradle-wrapper-${GRADLE_VERSION}.jar gradle/wrapper/gradle-wrapper.jar
+          cp /tmp/gradle-${GRADLE_VERSION}/gradlew gradlew
+          cp /tmp/gradle-${GRADLE_VERSION}/gradlew.bat gradlew.bat
+          chmod +x gradlew
+          rm -rf /tmp/gradle.zip /tmp/gradle-${GRADLE_VERSION}
+
+      - name: Create wrapper properties
+        run: |
+          cat > gradle/wrapper/gradle-wrapper.properties << 'PROPS'
           distributionBase=GRADLE_USER_HOME
           distributionPath=wrapper/dists
+          distributionUrl=https\://services.gradle.org/distributions/gradle-7.5.1-bin.zip
           zipStoreBase=GRADLE_USER_HOME
           zipStorePath=wrapper/dists
-          EOF
-          
-          cd gradle/wrapper
-          wget -q https://services.gradle.org/distributions/gradle-7.5.1-bin.zip
-          unzip -q gradle-7.5.1-bin.zip
-          cp gradle-7.5.1/lib/gradle-wrapper-7.5.1.jar gradle-wrapper.jar
-          cd - && chmod +x gradlew
+          PROPS
 
       - name: Build Release APK
         run: ./gradlew assembleRelease --no-daemon --stacktrace
 
       - name: Upload APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: DocViewer-APK
           path: app/build/outputs/apk/release/app-release.apk
