@@ -21,7 +21,7 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Create gradle wrapper
+      - name: Setup Gradle Wrapper
         run: |
           mkdir -p gradle/wrapper
           cat > gradle/wrapper/gradle-wrapper.properties << 'EOF'
@@ -31,14 +31,13 @@ jobs:
           zipStoreBase=GRADLE_USER_HOME
           zipStorePath=wrapper/dists
           EOF
-
-      - name: Download Gradle wrapper
-        run: |
-          wget -q https://raw.githubusercontent.com/gradle/gradle/v7.5.1/gradlew -O gradlew
-          chmod +x gradlew
-          wget -q https://raw.githubusercontent.com/gradle/gradle/v7.5.1/gradlew.bat -O gradlew.bat
-          wget -q https://services.gradle.org/distributions/gradle-7.5.1-bin.zip -P gradle/wrapper/
           
+          cd gradle/wrapper
+          wget -q https://services.gradle.org/distributions/gradle-7.5.1-bin.zip
+          unzip -q gradle-7.5.1-bin.zip
+          cp gradle-7.5.1/lib/gradle-wrapper-7.5.1.jar gradle-wrapper.jar
+          cd - && chmod +x gradlew
+
       - name: Build Release APK
         run: ./gradlew assembleRelease --no-daemon --stacktrace
 
